@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚔️ 한자배틀</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;900&family=Black+Han+Sans&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a18;
+  --surface: #12122a;
+  --card: #1a1a32;
+  --border: #282848;
+  --gold: #ffd700;
+  --gold2: #ffaa00;
+  --red: #ff4455;
+  --green: #00e676;
+  --blue: #4488ff;
+  --purple: #aa44ff;
+  --white: #f0f0ff;
+  --muted: #6666aa;
+  --hp-green: #00c851;
+  --hp-yellow: #ffbb33;
+  --hp-red: #ff4444;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--white);
+  font-family: 'Noto Serif KR', serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── 화면 전환 ── */
+.screen { display:none; position:relative; z-index:1; min-height:100vh; }
+.screen.active { display:flex; flex-direction:column; align-items:center; }
+
+/* ════════════════════════════════════
+   공통 버튼
+════════════════════════════════════ */
+.btn-gold {
+  padding: 16px 40px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  border: none; border-radius: 14px;
+  color: #1a1100;
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-gold:hover { transform: scale(1.04); box-shadow: 0 4px 20px rgba(255,215,0,0.4); }
+
+.btn-ghost {
+  padding: 10px 24px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--muted);
+  font-family: 'Noto Serif KR', serif;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-ghost:hover { border-color: var(--white); color: var(--white); }
+
+/* ════════════════════════════════════
+   메인 화면
+════════════════════════════════════ */
+#main-screen {
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+  gap: 28px;
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(68,136,255,0.07) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(170,68,255,0.07) 0%, transparent 50%),
+    var(--bg);
+}
+
+.main-logo {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: clamp(52px, 12vw, 100px);
+  background: linear-gradient(135deg, var(--gold), var(--gold2), #ff8800);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+  animation: titleFloat 3s ease-in-out infinite;
+}
+@keyframes titleFloat {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+.main-subtitle {
+  color: var(--muted); font-size: 15px; letter-spacing: 4px;
+  text-transform: uppercase; margin-top: -16px;
+}
+
+.level-select-wrap { width:100%; max-width:380px; }
+.level-label { font-size:12px; color:var(--muted); margin-bottom:8px; letter-spacing:2px; }
+.level-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.level-btn {
+  padding:10px 4px; border:1px solid var(--border); border-radius:10px;
+  background:var(--card); color:var(--muted);
+  font-family:'Black Han Sans',sans-serif; font-size:14px;
+  cursor:pointer; transition:all 0.15s; text-align:center;
+}
+.level-btn.active { border-color:var(--gold); color:var(--gold); background:rgba(255,215,0,0.08); }
+.level-btn:hover  { border-color:var(--gold2); color:var(--gold2); }
+
+.mode-buttons { display:flex; flex-direction:column; gap:14px; width:100%; max-width:380px; }
+.btn-mode {
+  padding:18px 24px; border:2px solid var(--border); border-radius:16px;
+  background:var(--card); color:var(--white);
+  font-family:'Black Han Sans',sans-serif; font-size:20px;
+  cursor:pointer; transition:all 0.2s;
+  display:flex; align-items:center; gap:14px; text-align:left;
+  position:relative; overflow:hidden;
+}
+.btn-mode::before { content:''; position:absolute; inset:0; opacity:0; transition:opacity 0.2s; }
+.btn-mode-1::before { background:linear-gradient(135deg,rgba(68,136,255,0.15),transparent); }
+.btn-mode-2::before { background:linear-gradient(135deg,rgba(255,68,85,0.15),transparent); }
+.btn-mode:hover { transform:translateY(-2px); border-color:var(--gold); }
+.btn-mode:hover::before { opacity:1; }
+.mode-icon { font-size:34px; }
+.mode-title { font-size:18px; color:var(--gold); display:block; }
+.mode-desc  { font-size:12px; color:var(--muted); font-family:'Noto Serif KR',serif; font-weight:400; margin-top:2px; display:block; }
+
+/* ════════════════════════════════════
+   파트너 선택 화면
+════════════════════════════════════ */
+#starter-screen {
+  justify-content: flex-start;
+  padding: 30px 20px 40px;
+  gap: 22px;
+  background: var(--bg);
+  overflow-y: auto;
+}
+
+.starter-header { text-align:center; }
+.starter-title {
+  font-family:'Black Han Sans',sans-serif; font-size:26px; color:var(--gold);
+}
+.starter-subtitle { font-size:13px; color:var(--muted); margin-top:6px; letter-spacing:1px; }
+
+.section-label {
+  font-size:12px; color:var(--muted); letter-spacing:2px;
+  width:100%; max-width:520px; padding:0 2px; margin-bottom:10px;
+}
+
+.poke-cards {
+  display:flex; gap:12px; justify-content:center; flex-wrap:wrap;
+  width:100%; max-width:520px;
+}
+
+.poke-card {
+  background:var(--card); border:2px solid var(--border);
+  border-radius:16px; padding:12px 10px;
+  width:140px; cursor:pointer;
+  transition:all 0.2s; position:relative; text-align:center;
+}
+.poke-card:hover { border-color:var(--gold); transform:translateY(-4px); box-shadow:0 8px 24px rgba(255,215,0,0.2); }
+.poke-card.in-party { border-color:var(--green); background:rgba(0,230,118,0.06); }
+.poke-card.in-party:hover { border-color:#00ff88; box-shadow:0 8px 24px rgba(0,230,118,0.2); }
+.poke-card.active-pokemon { border-color:var(--gold); background:rgba(255,215,0,0.1); }
+.poke-card img { width:110px; height:110px; object-fit:contain; image-rendering:pixelated; }
+.poke-card-name { font-family:'Black Han Sans',sans-serif; font-size:14px; color:var(--white); margin-top:6px; }
+.poke-card-level { font-size:11px; color:var(--muted); margin-top:2px; }
+.poke-badge {
+  position:absolute; top:8px; right:8px;
+  font-size:10px; font-family:'Black Han Sans',sans-serif;
+  padding:2px 7px; border-radius:20px;
+}
+.poke-badge.rare  { background:linear-gradient(135deg,var(--purple),#cc88ff); color:#fff; }
+.poke-badge.rare1 { background:linear-gradient(135deg,#ff8800,#ffcc00); color:#1a0a00; }
+.poke-badge.rare2 { background:linear-gradient(135deg,#00ccff,#aa44ff); color:#fff; }
+.poke-badge.mine  { background:rgba(0,230,118,0.2); color:var(--green); border:1px solid var(--green); }
+.poke-badge.out   { background:rgba(255,215,0,0.2); color:var(--gold); border:1px solid var(--gold); }
+.poke-badge.collected-badge { background:rgba(0,230,118,0.15); color:var(--green); border:1px solid rgba(0,230,118,0.4); }
+
+.poke-card.rare1-card { border-color:#ff8800; background:rgba(255,136,0,0.07); }
+.poke-card.rare1-card:hover { border-color:#ffcc00; box-shadow:0 8px 24px rgba(255,136,0,0.3); }
+.poke-card.rare2-card { border-color:#00ccff; background:rgba(0,204,255,0.07); }
+.poke-card.rare2-card:hover { border-color:#aa44ff; box-shadow:0 8px 24px rgba(0,204,255,0.3); }
+
+/* ════════════════════════════════════
+   배틀 화면
+════════════════════════════════════ */
+#battle-screen {
+  justify-content: flex-start;
+  background: var(--bg);
+}
+
+.battle-header {
+  width:100%; padding:12px 16px;
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom:1px solid var(--border); background:var(--surface);
+  flex-shrink:0;
+}
+.back-btn {
+  background:none; border:1px solid var(--border); color:var(--muted);
+  padding:7px 12px; border-radius:8px; cursor:pointer; font-size:12px;
+  transition:all 0.15s;
+}
+.back-btn:hover { color:var(--white); border-color:var(--white); }
+.level-badge {
+  background:rgba(255,215,0,0.12); border:1px solid rgba(255,215,0,0.3);
+  color:var(--gold); padding:5px 12px; border-radius:8px;
+  font-family:'Black Han Sans',sans-serif; font-size:13px;
+}
+.progress-dots { display:flex; gap:4px; }
+.dot { width:9px; height:9px; border-radius:50%; background:var(--border); transition:all 0.3s; }
+.dot.hit { background:var(--gold); box-shadow:0 0 5px var(--gold); }
+
+/* ── 3D 배틀 필드 ── */
+.battle-field {
+  width:100%; max-width:540px;
+  margin:0 auto;
+  position:relative;
+  height:280px;
+  flex-shrink:0;
+
+  /* 원근감 */
+  perspective: 600px;
+  overflow:hidden;
+
+  /* 배경: 위=어두운 하늘, 아래=바닥 */
+  background:
+    linear-gradient(180deg,
+      #08081a 0%,
+      #0d0d2a 40%,
+      #12182e 55%,
+      #1a2240 65%,
+      #1e2a38 75%,
+      #162030 100%
+    );
+}
+
+/* 바닥 그리드 (원근감) */
+.battle-field::before {
+  content:'';
+  position:absolute;
+  bottom:0; left:-20%; right:-20%;
+  height:45%;
+  background:
+    linear-gradient(90deg, rgba(68,136,255,0.08) 1px, transparent 1px),
+    linear-gradient(0deg,  rgba(68,136,255,0.08) 1px, transparent 1px);
+  background-size: 40px 40px;
+  transform: rotateX(60deg);
+  transform-origin: bottom center;
+}
+
+/* 바닥 광택 */
+.battle-field::after {
+  content:'';
+  position:absolute;
+  bottom:0; left:0; right:0; height:45%;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    rgba(68,136,255,0.03) 60%,
+    rgba(68,136,255,0.08) 100%
+  );
+}
+
+/* 상대 몬스터 (뒤쪽 = 크게) */
+.enemy-wrap {
+  position:absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-20%);
+  display:flex; flex-direction:column; align-items:center;
+  z-index:3;
+}
+
+.enemy-img {
+  width: 200px; height: 200px;
+  object-fit:contain; image-rendering:pixelated;
+  filter: drop-shadow(0 0 20px rgba(255,68,85,0.5));
+  transition: transform 0.1s;
+  animation: enemyFloat 3s ease-in-out infinite;
+}
+@keyframes enemyFloat {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+.enemy-img.shake {
+  animation: monsterShake 0.4s ease;
+}
+.enemy-img.hit-anim {
+  animation: monsterHit 0.35s ease;
+}
+@keyframes monsterShake {
+  0%,100% { transform:translateX(0); }
+  20% { transform:translateX(10px); }
+  40% { transform:translateX(-10px); }
+  60% { transform:translateX(7px); }
+  80% { transform:translateX(-5px); }
+}
+@keyframes monsterHit {
+  0%   { filter:drop-shadow(0 0 30px rgba(255,68,85,1)) brightness(3); transform:scale(1.1); }
+  50%  { filter:drop-shadow(0 0 20px rgba(255,68,85,0.6)) brightness(1.5); transform:scale(0.95); }
+  100% { filter:drop-shadow(0 0 20px rgba(255,68,85,0.5)); transform:scale(1); }
+}
+
+.enemy-name-tag {
+  background: rgba(255,68,85,0.15);
+  border: 1px solid rgba(255,68,85,0.4);
+  border-radius:8px; padding:3px 12px;
+  font-family:'Black Han Sans',sans-serif;
+  font-size:13px; color:#ff8899;
+  margin-top:2px; white-space:nowrap;
+}
+
+/* 내 포켓몬 (앞쪽 = 작게, 뒤돌아봄 느낌) */
+.my-wrap {
+  position:absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-130%);
+  display:flex; flex-direction:column; align-items:center;
+  z-index:4;
+}
+
+.my-img {
+  width: 110px; height: 110px;
+  object-fit:contain; image-rendering:pixelated;
+  /* 뒤돌아보는 느낌: 좌우 반전 + 살짝 밝게 */
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.6)) brightness(1.1);
+  /* 3D 원근감: 앞에 있는 것처럼 약간 기울임 */
+  transform: scaleX(-1) perspective(300px) rotateY(10deg);
+  animation: myFloat 2.5s ease-in-out infinite;
+}
+@keyframes myFloat {
+  0%,100% { transform: scaleX(-1) perspective(300px) rotateY(10deg) translateY(0); }
+  50%      { transform: scaleX(-1) perspective(300px) rotateY(10deg) translateY(-5px); }
+}
+.my-img.attack-anim {
+  animation: myAttack 0.4s ease;
+}
+@keyframes myAttack {
+  0%   { transform: scaleX(-1) perspective(300px) rotateY(10deg) translateX(0); }
+  40%  { transform: scaleX(-1) perspective(300px) rotateY(10deg) translateX(60px) scale(1.05); }
+  100% { transform: scaleX(-1) perspective(300px) rotateY(10deg) translateX(0); }
+}
+
+.my-name-tag {
+  background: rgba(0,230,118,0.12);
+  border: 1px solid rgba(0,230,118,0.35);
+  border-radius:8px; padding:3px 10px;
+  font-family:'Black Han Sans',sans-serif;
+  font-size:12px; color:#00e676;
+  margin-top:2px; white-space:nowrap;
+}
+
+/* 그림자 (원근감 강조) */
+.enemy-shadow {
+  position:absolute;
+  bottom: 28%;
+  left: calc(50% - 20% - 60px);
+  width:120px; height:20px;
+  background: radial-gradient(ellipse, rgba(255,68,85,0.3) 0%, transparent 70%);
+  border-radius:50%;
+  animation: shadowScale 3s ease-in-out infinite;
+}
+@keyframes shadowScale {
+  0%,100% { transform:scale(1); opacity:0.6; }
+  50%      { transform:scale(0.85); opacity:0.3; }
+}
+
+.my-shadow {
+  position:absolute;
+  bottom: 4%;
+  left: calc(50% - 130% - 30px);
+  width:70px; height:12px;
+  background: radial-gradient(ellipse, rgba(68,255,136,0.25) 0%, transparent 70%);
+  border-radius:50%;
+  animation: myShadowScale 2.5s ease-in-out infinite;
+}
+@keyframes myShadowScale {
+  0%,100% { transform:scale(1); opacity:0.5; }
+  50%      { transform:scale(0.85); opacity:0.25; }
+}
+
+/* ── 배틀 정보 패널 ── */
+.battle-info {
+  width:100%; max-width:540px; margin:0 auto;
+  padding:10px 16px;
+  display:flex; justify-content:space-between; align-items:stretch;
+  gap:10px; flex-shrink:0;
+}
+
+/* 몬스터 HP */
+.enemy-hp-panel {
+  flex:1; background:var(--surface);
+  border:1px solid rgba(255,68,85,0.25);
+  border-radius:12px; padding:8px 12px;
+}
+.hp-panel-name { font-size:11px; color:#ff8899; letter-spacing:1px; margin-bottom:4px; }
+.hp-bar-wrap { display:flex; align-items:center; gap:6px; }
+.hp-bar { flex:1; height:10px; background:var(--border); border-radius:5px; overflow:hidden; }
+.hp-fill { height:100%; border-radius:5px; background:var(--hp-green); transition:width 0.4s ease, background 0.3s; }
+.hp-fill.yellow { background:var(--hp-yellow); }
+.hp-fill.red    { background:var(--hp-red); }
+.hp-text { font-size:11px; color:var(--muted); width:36px; text-align:right; flex-shrink:0; }
+
+/* 내 HP + 스킬 */
+.my-hp-panel {
+  flex:1; background:var(--surface);
+  border:1px solid rgba(0,230,118,0.2);
+  border-radius:12px; padding:8px 12px;
+  display:flex; flex-direction:column; gap:6px;
+}
+.hp-panel-name.mine { color:var(--green); }
+.player-hearts { display:flex; gap:4px; }
+.heart { font-size:18px; transition:all 0.3s; }
+.heart.empty { filter:grayscale(1) opacity(0.3); }
+
+.skill-btn {
+  background: var(--card); border:1px solid var(--border);
+  border-radius:8px; padding:5px 8px;
+  display:flex; align-items:center; gap:6px;
+  cursor:pointer; transition:all 0.2s;
+  font-size:12px; color:var(--muted);
+  position:relative; overflow:hidden;
+}
+
+/* 충전 중: 파이프 색에 따라 점점 주황빛 */
+.skill-btn.charging {
+  border-color: rgba(255,100,0,0.4);
+  color: #ffaa44;
+}
+
+/* 스킬 준비됨: 불타는 이펙트 */
+.skill-btn.ready {
+  border-color: #ff6600;
+  color: #fff;
+  background: linear-gradient(135deg, #1a0800, #2a1000);
+  animation: fireBorder 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes fireBorder {
+  0%   { border-color:#ff4400; box-shadow: 0 0 8px #ff4400, 0 0 20px rgba(255,68,0,0.5), inset 0 0 12px rgba(255,100,0,0.15); }
+  50%  { border-color:#ff8800; box-shadow: 0 0 14px #ff8800, 0 0 32px rgba(255,136,0,0.6), inset 0 0 18px rgba(255,150,0,0.2); }
+  100% { border-color:#ffcc00; box-shadow: 0 0 10px #ffcc00, 0 0 24px rgba(255,200,0,0.5), inset 0 0 14px rgba(255,200,0,0.15); }
+}
+
+/* 불꽃 파티클 레이어 */
+.skill-btn.ready::before {
+  content:'';
+  position:absolute; inset:0;
+  background: linear-gradient(180deg,
+    rgba(255,80,0,0.0) 0%,
+    rgba(255,120,0,0.12) 40%,
+    rgba(255,60,0,0.18) 70%,
+    rgba(255,30,0,0.08) 100%
+  );
+  animation: fireFlicker 0.3s ease-in-out infinite alternate;
+  pointer-events:none;
+  border-radius:8px;
+}
+
+@keyframes fireFlicker {
+  0%   { opacity:0.6; transform:scaleY(1); }
+  100% { opacity:1;   transform:scaleY(1.04); }
+}
+
+/* 불꽃 글자 */
+.skill-btn.ready .skill-fire-text {
+  background: linear-gradient(180deg, #ffee00 0%, #ff6600 60%, #ff2200 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  font-family:'Black Han Sans',sans-serif;
+  font-size:13px;
+  animation: fireTextFlicker 0.4s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 4px rgba(255,100,0,0.8));
+}
+@keyframes fireTextFlicker {
+  0%   { filter:drop-shadow(0 0 3px rgba(255,80,0,0.8)); }
+  100% { filter:drop-shadow(0 0 8px rgba(255,180,0,1)); }
+}
+
+.skill-pips { display:flex; gap:3px; }
+.skill-pip {
+  width:7px; height:7px; border-radius:50%;
+  background:var(--border); transition:background 0.3s, box-shadow 0.3s;
+}
+.skill-pip.filled {
+  background: linear-gradient(135deg, #ff8800, #ffcc00);
+  box-shadow: 0 0 4px rgba(255,136,0,0.7);
+}
+/* 스킬 준비 시 pip들도 불타게 */
+.skill-btn.ready .skill-pip.filled {
+  background: linear-gradient(135deg, #ff4400, #ff8800, #ffee00);
+  box-shadow: 0 0 6px rgba(255,100,0,0.9);
+  animation: pipFire 0.4s ease-in-out infinite alternate;
+}
+@keyframes pipFire {
+  0%   { box-shadow:0 0 4px rgba(255,60,0,0.8); }
+  100% { box-shadow:0 0 10px rgba(255,180,0,1); }
+}
+
+/* ── 한자 & 선택지 ── */
+.hanja-area {
+  width:100%; max-width:540px; margin:0 auto;
+  padding:8px 16px 0;
+  text-align:center; flex-shrink:0;
+}
+.hanja-char {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(60px,15vw,90px);
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  line-height:1; display:block;
+  filter:drop-shadow(0 0 16px rgba(255,215,0,0.3));
+}
+.hanja-hint { font-size:12px; color:var(--muted); margin-top:2px; letter-spacing:2px; }
+
+.choices-grid {
+  width:100%; max-width:540px; margin:0 auto;
+  padding:10px 16px 20px;
+  display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;
+}
+.choice-btn {
+  padding:16px 6px; border:2px solid var(--border); border-radius:12px;
+  background:var(--card); color:var(--white);
+  font-family:'Black Han Sans',sans-serif; font-size:14px;
+  cursor:pointer; transition:all 0.15s; text-align:center; line-height:1.4;
+}
+.choice-btn:hover:not(:disabled) { border-color:var(--gold2); background:rgba(255,170,0,0.08); transform:translateY(-2px); }
+.choice-btn.correct { border-color:var(--green); background:rgba(0,230,118,0.12); color:var(--green); animation:choiceOk 0.4s ease; }
+.choice-btn.wrong   { border-color:var(--red);   background:rgba(255,68,85,0.12);  color:var(--red);   animation:choiceNg 0.3s ease; }
+@keyframes choiceOk { 0%{transform:scale(1)} 50%{transform:scale(1.06)} 100%{transform:scale(1)} }
+@keyframes choiceNg { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+/* ════════════════════════════════════
+   처치 후 선택 화면
+════════════════════════════════════ */
+#catch-screen {
+  justify-content: flex-start;
+  padding: 28px 20px 40px;
+  gap: 20px;
+  background: var(--bg);
+  overflow-y: auto;
+}
+.catch-title { font-family:'Black Han Sans',sans-serif; font-size:28px; color:var(--gold); text-align:center; }
+.catch-subtitle { font-size:13px; color:var(--muted); text-align:center; margin-top:-12px; }
+
+.stat-row { display:flex; gap:16px; justify-content:center; }
+.stat-box { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px 20px; text-align:center; }
+.stat-num { font-family:'Black Han Sans',sans-serif; font-size:30px; color:var(--gold); display:block; }
+.stat-label { font-size:11px; color:var(--muted); margin-top:2px; letter-spacing:1px; }
+
+.collection-bar {
+  width:100%; max-width:520px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:12px; padding:10px 14px;
+  display:flex; align-items:center; gap:10px;
+}
+.coll-label { font-size:11px; color:var(--muted); white-space:nowrap; letter-spacing:1px; }
+.coll-imgs { display:flex; gap:4px; flex-wrap:wrap; }
+.coll-thumb {
+  width:34px; height:34px; object-fit:contain; image-rendering:pixelated;
+  border-radius:6px; background:var(--card); border:1px solid var(--border);
+  animation:thumbPop 0.3s ease;
+}
+@keyframes thumbPop { 0%{transform:scale(0);opacity:0} 60%{transform:scale(1.2)} 100%{transform:scale(1);opacity:1} }
+
+/* ════════════════════════════════════
+   게임 오버 화면
+════════════════════════════════════ */
+#gameover-screen {
+  justify-content: center; align-items: center;
+  padding: 40px 20px; gap: 24px;
+  background: var(--bg);
+}
+.gameover-img {
+  width:160px; height:160px; object-fit:contain; image-rendering:pixelated;
+  filter:grayscale(0.4) drop-shadow(0 0 20px rgba(255,68,85,0.5));
+  animation:goAppear 0.5s ease;
+}
+@keyframes goAppear { 0%{transform:scale(0.5);opacity:0} 60%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
+.gameover-title { font-family:'Black Han Sans',sans-serif; font-size:40px; color:var(--red); }
+
+/* ════════════════════════════════════
+   이펙트
+════════════════════════════════════ */
+.damage-float {
+  position:fixed; font-family:'Black Han Sans',sans-serif;
+  font-size:34px; pointer-events:none; z-index:999;
+  animation:floatUp 0.8s ease forwards;
+}
+.damage-float.dmg  { color:var(--red); }
+.damage-float.crit { color:var(--gold); font-size:46px; }
+@keyframes floatUp {
+  0%   { transform:translateY(0) scale(1); opacity:1; }
+  100% { transform:translateY(-80px) scale(0.6); opacity:0; }
+}
+
+.screen-flash { position:fixed; inset:0; pointer-events:none; z-index:100; opacity:0; transition:opacity 0.1s; }
+.screen-flash.red   { background:rgba(255,68,85,0.2); }
+.screen-flash.green { background:rgba(0,230,118,0.15); }
+.screen-flash.gold  { background:rgba(255,215,0,0.15); }
+.screen-flash.show  { opacity:1; }
+
+/* 레이저 */
+.laser-container { position:fixed; inset:0; pointer-events:none; z-index:300; overflow:hidden; }
+.laser-beam {
+  position:absolute; height:5px;
+  background:linear-gradient(90deg,transparent,#aa44ff,#fff,#aa44ff,transparent);
+  border-radius:3px;
+  box-shadow:0 0 10px #aa44ff, 0 0 24px rgba(170,68,255,0.6);
+  animation:laserFire 0.3s ease-out forwards;
+  transform-origin:left center;
+}
+@keyframes laserFire { 0%{width:0;opacity:1} 60%{width:100vw;opacity:1} 100%{width:100vw;opacity:0} }
+.laser-impact {
+  position:absolute; width:70px; height:70px; border-radius:50%;
+  background:radial-gradient(circle,#fff 0%,#aa44ff 40%,transparent 70%);
+  animation:impactBurst 0.4s ease-out forwards;
+  transform:translate(-50%,-50%);
+}
+@keyframes impactBurst {
+  0%  { transform:translate(-50%,-50%) scale(0.2); opacity:1; }
+  50% { transform:translate(-50%,-50%) scale(1.4); opacity:0.8; }
+  100%{ transform:translate(-50%,-50%) scale(2.2); opacity:0; }
+}
+.laser-ring {
+  position:absolute; width:90px; height:90px;
+  border:3px solid #aa44ff; border-radius:50%;
+  animation:ringExpand 0.5s ease-out forwards;
+  transform:translate(-50%,-50%);
+}
+@keyframes ringExpand {
+  0%  { transform:translate(-50%,-50%) scale(0.3); opacity:1; }
+  100%{ transform:translate(-50%,-50%) scale(2.8); opacity:0; }
+}
+
+/* 폭죽 */
+.confetti-wrap { position:fixed; inset:0; pointer-events:none; z-index:200; overflow:hidden; }
+.cp {
+  position:absolute; top:-20px;
+  animation:cpFall linear forwards; border-radius:2px;
+}
+@keyframes cpFall {
+  0%  { transform:translateY(0) rotate(0deg); opacity:1; }
+  100%{ transform:translateY(110vh) rotate(720deg); opacity:0; }
+}
+
+/* 스크롤바 */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:var(--bg); }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+</style>
+</head>
+<body>
+
+<!-- 이펙트 레이어 -->
+<div class="screen-flash red"   id="fx-red"></div>
+<div class="screen-flash green" id="fx-green"></div>
+<div class="screen-flash gold"  id="fx-gold"></div>
+<div class="confetti-wrap" id="confetti"></div>
+<div class="laser-container" id="laser-wrap"></div>
+
+<!-- ══════════════════════════════════
+     1. 메인 (급수 선택)
+══════════════════════════════════ -->
+<div class="screen active" id="main-screen">
+  <div class="main-logo">⚔️ 한자배틀</div>
+  <div class="main-subtitle">훈과 음을 정복하라</div>
+
+  <!-- 메인 포켓몬 3마리 -->
+  <div id="main-pokemons" style="display:flex;gap:8px;align-items:flex-end;justify-content:center;margin:4px 0;">
+    <!-- JS로 삽입 -->
+  </div>
+
+  <style>
+    @keyframes mainPokeBounce {
+      0%,100% { transform:translateY(0) scaleX(1); }
+      50%      { transform:translateY(-10px) scaleX(1); }
+    }
+  </style>
+
+  <div class="level-select-wrap">
+    <div class="level-label">◆ 급수 선택 (한자능력검정시험)</div>
+    <div class="level-grid" id="level-grid">
+      <button class="level-btn active" data-level="8">8급</button>
+      <button class="level-btn" data-level="7">7급</button>
+      <button class="level-btn" data-level="6">6급</button>
+      <button class="level-btn" data-level="5">5급</button>
+      <button class="level-btn" data-level="4">4급</button>
+      <button class="level-btn" data-level="3">3급</button>
+      <button class="level-btn" data-level="2">2급</button>
+      <button class="level-btn" data-level="1">1급</button>
+    </div>
+  </div>
+
+  <div class="mode-buttons">
+    <button class="btn-mode btn-mode-1" onclick="goStarterSelect()">
+      <span class="mode-icon">⚒️</span>
+      <span class="mode-text">
+        <span class="mode-title">한자 익히기</span>
+        <span class="mode-desc">🔥 대장간에서 연마하듯 한자를 단련하라!</span>
+      </span>
+    </button>
+    <button class="btn-mode btn-mode-2" onclick="alert('⚔️ 2인 배틀 — 곧 출시!')">
+      <span class="mode-icon">⚔️</span>
+      <span class="mode-text">
+        <span class="mode-title">한자배틀 (준비중)</span>
+        <span class="mode-desc">2인 실시간 대전 — 먼저 맞추면 스킬 발동!</span>
+      </span>
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     2. 파트너 선택
+══════════════════════════════════ -->
+<div class="screen" id="starter-screen">
+  <div class="starter-header">
+    <div class="catch-title" id="starter-title">⚡ 파트너를 골라라!</div>
+    <div class="catch-subtitle" id="starter-subtitle">함께 싸울 포켓몬을 선택하세요</div>
+  </div>
+
+  <!-- 내 파티 (2회차부터) -->
+  <div id="party-zone" style="display:none; width:100%; max-width:520px;">
+    <div class="section-label">🎒 내 파티 — 출전할 포켓몬을 선택</div>
+    <div class="poke-cards" id="party-cards"></div>
+  </div>
+
+  <!-- 새 포켓몬 제안 -->
+  <div style="width:100%; max-width:520px;">
+    <div class="section-label" id="new-label">✨ 새 파트너 후보</div>
+    <div class="poke-cards" id="new-cards"></div>
+  </div>
+
+  <button class="btn-ghost" onclick="goMain()">← 급수 변경</button>
+</div>
+
+<!-- ══════════════════════════════════
+     3. 배틀
+══════════════════════════════════ -->
+<div class="screen" id="battle-screen">
+  <!-- 헤더 -->
+  <div class="battle-header">
+    <button class="back-btn" onclick="goStarterSelect()">🔄 교체</button>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+      <span style="font-size:11px;color:var(--muted);letter-spacing:1px;">몬스터 HP</span>
+      <div class="progress-dots" id="progress-dots"></div>
+    </div>
+    <div class="level-badge" id="level-badge">8급</div>
+  </div>
+
+  <!-- 3D 배틀 필드 -->
+  <div class="battle-field">
+    <!-- 그림자 -->
+    <div class="enemy-shadow"></div>
+    <div class="my-shadow"></div>
+
+    <!-- 상대 몬스터 (크고 뒤에) -->
+    <div class="enemy-wrap">
+      <img class="enemy-img" id="enemy-img" src="" alt="몬스터">
+      <div class="enemy-name-tag" id="enemy-name">???</div>
+    </div>
+
+    <!-- 내 포켓몬 (작고 앞에) -->
+    <div class="my-wrap">
+      <img class="my-img" id="my-img" src="" alt="내 포켓몬">
+      <div class="my-name-tag" id="my-name">???</div>
+    </div>
+  </div>
+
+  <!-- HP 패널 -->
+  <div class="battle-info">
+    <div class="enemy-hp-panel">
+      <div class="hp-panel-name">상대 몬스터</div>
+      <div class="hp-bar-wrap">
+        <div class="hp-label" style="font-size:11px;color:var(--muted);width:20px;flex-shrink:0;">HP</div>
+        <div class="hp-bar"><div class="hp-fill" id="enemy-hp-fill" style="width:100%"></div></div>
+        <div class="hp-text" id="enemy-hp-text">10/10</div>
+      </div>
+    </div>
+
+    <div class="my-hp-panel">
+      <div class="hp-panel-name mine">내 포켓몬</div>
+      <div class="player-hearts" id="player-hearts">
+        <span class="heart">❤️</span><span class="heart">❤️</span><span class="heart">❤️</span>
+      </div>
+      <div class="skill-btn" id="skill-btn" onclick="useSkill()">
+        <span id="skill-label" class="skill-fire-text">⚡ 스킬</span>
+        <div class="skill-pips" id="skill-pips">
+          <div class="skill-pip"></div>
+          <div class="skill-pip"></div>
+          <div class="skill-pip"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 한자 -->
+  <div class="hanja-area">
+    <span class="hanja-char" id="hanja-char">山</span>
+    <div class="hanja-hint" id="hanja-hint">훈(訓)과 음(音)을 고르세요</div>
+  </div>
+
+  <!-- 선택지 -->
+  <div class="choices-grid" id="choices-grid"></div>
+</div>
+
+<!-- ══════════════════════════════════
+     4. 처치 후 선택
+══════════════════════════════════ -->
+<div class="screen" id="catch-screen">
+  <div class="catch-title">🎉 처치 성공!</div>
+  <div class="catch-subtitle" id="catch-caught-name">포켓몬을 수집했습니다!</div>
+
+  <div class="stat-row">
+    <div class="stat-box"><span class="stat-num" id="c-correct">0</span><div class="stat-label">정답</div></div>
+    <div class="stat-box"><span class="stat-num" id="c-wrong">0</span><div class="stat-label">오답</div></div>
+    <div class="stat-box"><span class="stat-num" id="c-combo">0</span><div class="stat-label">최대콤보</div></div>
+  </div>
+
+  <!-- 수집 도감 -->
+  <div class="collection-bar" style="width:100%;max-width:520px;">
+    <div class="coll-label">📦 수집</div>
+    <div class="coll-imgs" id="coll-imgs"></div>
+  </div>
+
+  <!-- 다음 상대 선택 -->
+  <div style="width:100%;max-width:520px;">
+    <div class="section-label">⚔️ 다음 상대를 골라라!</div>
+    <div class="poke-cards" id="next-enemy-cards"></div>
+  </div>
+
+  <button class="btn-ghost" onclick="goMain()">← 급수 변경</button>
+</div>
+
+<!-- ══════════════════════════════════
+     5. 게임 오버
+══════════════════════════════════ -->
+<div class="screen" id="gameover-screen">
+  <img class="gameover-img" id="go-img" src="" alt="">
+  <div class="gameover-title">💀 게임 오버</div>
+  <div class="stat-row">
+    <div class="stat-box"><span class="stat-num" id="go-correct">0</span><div class="stat-label">정답</div></div>
+    <div class="stat-box"><span class="stat-num" id="go-wrong">0</span><div class="stat-label">오답</div></div>
+    <div class="stat-box"><span class="stat-num" id="go-combo">0</span><div class="stat-label">최대콤보</div></div>
+  </div>
+  <button class="btn-gold" onclick="retryBattle()">다시 도전 ↺</button>
+  <button class="btn-ghost" onclick="goMain()">← 급수 변경</button>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+// 한자 DB (한국어문회 급수 기준)
+// ════════════════════════════════════════════
+const HANJA_DB = {
+  8:[
+    {char:"敎",hoon:"가르칠",eum:"교"},{char:"校",hoon:"학교",eum:"교"},
+    {char:"九",hoon:"아홉",eum:"구"},{char:"國",hoon:"나라",eum:"국"},
+    {char:"軍",hoon:"군사",eum:"군"},{char:"金",hoon:"쇠",eum:"금"},
+    {char:"南",hoon:"남녘",eum:"남"},{char:"女",hoon:"여자",eum:"녀"},
+    {char:"年",hoon:"해",eum:"년"},{char:"大",hoon:"큰",eum:"대"},
+    {char:"東",hoon:"동녘",eum:"동"},{char:"萬",hoon:"일만",eum:"만"},
+    {char:"母",hoon:"어미",eum:"모"},{char:"木",hoon:"나무",eum:"목"},
+    {char:"門",hoon:"문",eum:"문"},{char:"民",hoon:"백성",eum:"민"},
+    {char:"白",hoon:"흰",eum:"백"},{char:"父",hoon:"아비",eum:"부"},
+    {char:"北",hoon:"북녘",eum:"북"},{char:"四",hoon:"넉",eum:"사"},
+    {char:"山",hoon:"뫼",eum:"산"},{char:"三",hoon:"석",eum:"삼"},
+    {char:"生",hoon:"날",eum:"생"},{char:"西",hoon:"서녘",eum:"서"},
+    {char:"先",hoon:"먼저",eum:"선"},{char:"小",hoon:"작을",eum:"소"},
+    {char:"水",hoon:"물",eum:"수"},{char:"室",hoon:"집",eum:"실"},
+    {char:"十",hoon:"열",eum:"십"},{char:"五",hoon:"다섯",eum:"오"},
+    {char:"王",hoon:"임금",eum:"왕"},{char:"外",hoon:"바깥",eum:"외"},
+    {char:"月",hoon:"달",eum:"월"},{char:"二",hoon:"두",eum:"이"},
+    {char:"人",hoon:"사람",eum:"인"},{char:"一",hoon:"한",eum:"일"},
+    {char:"日",hoon:"날",eum:"일"},{char:"長",hoon:"긴",eum:"장"},
+    {char:"弟",hoon:"아우",eum:"제"},{char:"中",hoon:"가운데",eum:"중"},
+    {char:"靑",hoon:"푸를",eum:"청"},{char:"七",hoon:"일곱",eum:"칠"},
+    {char:"土",hoon:"흙",eum:"토"},{char:"八",hoon:"여덟",eum:"팔"},
+    {char:"學",hoon:"배울",eum:"학"},{char:"韓",hoon:"나라",eum:"한"},
+    {char:"兄",hoon:"형",eum:"형"},{char:"火",hoon:"불",eum:"화"},
+    {char:"六",hoon:"여섯",eum:"육"},{char:"下",hoon:"아래",eum:"하"},
+  ],
+  7:[
+    {char:"家",hoon:"집",eum:"가"},{char:"歌",hoon:"노래",eum:"가"},
+    {char:"江",hoon:"강",eum:"강"},{char:"空",hoon:"빌",eum:"공"},
+    {char:"工",hoon:"장인",eum:"공"},{char:"氣",hoon:"기운",eum:"기"},
+    {char:"農",hoon:"농사",eum:"농"},{char:"道",hoon:"길",eum:"도"},
+    {char:"讀",hoon:"읽을",eum:"독"},{char:"力",hoon:"힘",eum:"력"},
+    {char:"里",hoon:"마을",eum:"리"},{char:"林",hoon:"수풀",eum:"림"},
+    {char:"面",hoon:"낯",eum:"면"},{char:"名",hoon:"이름",eum:"명"},
+    {char:"命",hoon:"목숨",eum:"명"},{char:"文",hoon:"글월",eum:"문"},
+    {char:"物",hoon:"만물",eum:"물"},{char:"方",hoon:"모",eum:"방"},
+    {char:"夫",hoon:"지아비",eum:"부"},{char:"不",hoon:"아닐",eum:"불"},
+    {char:"事",hoon:"일",eum:"사"},{char:"色",hoon:"빛",eum:"색"},
+    {char:"上",hoon:"위",eum:"상"},{char:"食",hoon:"밥",eum:"식"},
+    {char:"語",hoon:"말씀",eum:"어"},{char:"右",hoon:"오른",eum:"우"},
+    {char:"雨",hoon:"비",eum:"우"},{char:"有",hoon:"있을",eum:"유"},
+    {char:"子",hoon:"아들",eum:"자"},{char:"字",hoon:"글자",eum:"자"},
+    {char:"電",hoon:"번개",eum:"전"},{char:"田",hoon:"밭",eum:"전"},
+    {char:"正",hoon:"바를",eum:"정"},{char:"足",hoon:"발",eum:"족"},
+    {char:"左",hoon:"왼",eum:"좌"},{char:"地",hoon:"땅",eum:"지"},
+    {char:"天",hoon:"하늘",eum:"천"},{char:"草",hoon:"풀",eum:"초"},
+    {char:"村",hoon:"마을",eum:"촌"},{char:"出",hoon:"날",eum:"출"},
+    {char:"入",hoon:"들",eum:"입"},{char:"漢",hoon:"한수",eum:"한"},
+    {char:"海",hoon:"바다",eum:"해"},{char:"馬",hoon:"말",eum:"마"},
+    {char:"然",hoon:"그럴",eum:"연"},{char:"洞",hoon:"골",eum:"동"},
+  ],
+  6:[
+    {char:"各",hoon:"각각",eum:"각"},{char:"感",hoon:"느낄",eum:"감"},
+    {char:"强",hoon:"강할",eum:"강"},{char:"計",hoon:"셀",eum:"계"},
+    {char:"古",hoon:"예",eum:"고"},{char:"高",hoon:"높을",eum:"고"},
+    {char:"交",hoon:"사귈",eum:"교"},{char:"近",hoon:"가까울",eum:"근"},
+    {char:"內",hoon:"안",eum:"내"},{char:"老",hoon:"늙을",eum:"노"},
+    {char:"來",hoon:"올",eum:"래"},{char:"立",hoon:"설",eum:"립"},
+    {char:"每",hoon:"매양",eum:"매"},{char:"明",hoon:"밝을",eum:"명"},
+    {char:"半",hoon:"반",eum:"반"},{char:"百",hoon:"일백",eum:"백"},
+    {char:"別",hoon:"나눌",eum:"별"},{char:"病",hoon:"병",eum:"병"},
+    {char:"本",hoon:"근본",eum:"본"},{char:"分",hoon:"나눌",eum:"분"},
+    {char:"社",hoon:"모일",eum:"사"},{char:"算",hoon:"셀",eum:"산"},
+    {char:"書",hoon:"쓸",eum:"서"},{char:"石",hoon:"돌",eum:"석"},
+    {char:"世",hoon:"인간",eum:"세"},{char:"所",hoon:"바",eum:"소"},
+    {char:"手",hoon:"손",eum:"수"},{char:"市",hoon:"저자",eum:"시"},
+    {char:"身",hoon:"몸",eum:"신"},{char:"愛",hoon:"사랑",eum:"애"},
+    {char:"野",hoon:"들",eum:"야"},{char:"洋",hoon:"큰바다",eum:"양"},
+    {char:"用",hoon:"쓸",eum:"용"},{char:"雲",hoon:"구름",eum:"운"},
+    {char:"主",hoon:"주인",eum:"주"},{char:"米",hoon:"쌀",eum:"미"},
+  ],
+  5:[
+    {char:"加",hoon:"더할",eum:"가"},{char:"改",hoon:"고칠",eum:"개"},
+    {char:"決",hoon:"결단할",eum:"결"},{char:"結",hoon:"맺을",eum:"결"},
+    {char:"果",hoon:"실과",eum:"과"},{char:"光",hoon:"빛",eum:"광"},
+    {char:"今",hoon:"이제",eum:"금"},{char:"急",hoon:"급할",eum:"급"},
+    {char:"當",hoon:"마땅",eum:"당"},{char:"對",hoon:"대할",eum:"대"},
+    {char:"度",hoon:"법도",eum:"도"},{char:"動",hoon:"움직일",eum:"동"},
+    {char:"頭",hoon:"머리",eum:"두"},{char:"望",hoon:"바랄",eum:"망"},
+    {char:"無",hoon:"없을",eum:"무"},{char:"問",hoon:"물을",eum:"문"},
+    {char:"美",hoon:"아름다울",eum:"미"},{char:"放",hoon:"놓을",eum:"방"},
+    {char:"法",hoon:"법",eum:"법"},{char:"速",hoon:"빠를",eum:"속"},
+    {char:"始",hoon:"비로소",eum:"시"},{char:"失",hoon:"잃을",eum:"실"},
+    {char:"安",hoon:"편안",eum:"안"},{char:"業",hoon:"업",eum:"업"},
+    {char:"完",hoon:"완전할",eum:"완"},{char:"勇",hoon:"날랠",eum:"용"},
+    {char:"意",hoon:"뜻",eum:"의"},{char:"作",hoon:"지을",eum:"작"},
+    {char:"才",hoon:"재주",eum:"재"},{char:"戰",hoon:"싸울",eum:"전"},
+    {char:"知",hoon:"알",eum:"지"},{char:"集",hoon:"모을",eum:"집"},
+  ],
+  4:[
+    {char:"看",hoon:"볼",eum:"간"},{char:"減",hoon:"덜",eum:"감"},
+    {char:"建",hoon:"세울",eum:"건"},{char:"健",hoon:"굳셀",eum:"건"},
+    {char:"考",hoon:"생각할",eum:"고"},{char:"官",hoon:"벼슬",eum:"관"},
+    {char:"廣",hoon:"넓을",eum:"광"},{char:"橋",hoon:"다리",eum:"교"},
+    {char:"君",hoon:"임금",eum:"군"},{char:"能",hoon:"능할",eum:"능"},
+    {char:"談",hoon:"말씀",eum:"담"},{char:"答",hoon:"대답",eum:"답"},
+    {char:"德",hoon:"큰",eum:"덕"},{char:"獨",hoon:"홀로",eum:"독"},
+    {char:"得",hoon:"얻을",eum:"득"},{char:"良",hoon:"어질",eum:"량"},
+    {char:"論",hoon:"논할",eum:"론"},{char:"務",hoon:"힘쓸",eum:"무"},
+    {char:"味",hoon:"맛",eum:"미"},{char:"博",hoon:"넓을",eum:"박"},
+    {char:"報",hoon:"갚을",eum:"보"},{char:"保",hoon:"지킬",eum:"보"},
+    {char:"福",hoon:"복",eum:"복"},{char:"産",hoon:"낳을",eum:"산"},
+    {char:"商",hoon:"장사",eum:"상"},{char:"說",hoon:"말씀",eum:"설"},
+    {char:"性",hoon:"성품",eum:"성"},{char:"信",hoon:"믿을",eum:"신"},
+    {char:"展",hoon:"펼",eum:"전"},{char:"識",hoon:"알",eum:"식"},
+  ],
+  3:[
+    {char:"佳",hoon:"아름다울",eum:"가"},{char:"甲",hoon:"갑옷",eum:"갑"},
+    {char:"孤",hoon:"외로울",eum:"고"},{char:"穀",hoon:"곡식",eum:"곡"},
+    {char:"骨",hoon:"뼈",eum:"골"},{char:"恭",hoon:"공손할",eum:"공"},
+    {char:"克",hoon:"이길",eum:"극"},{char:"勤",hoon:"부지런할",eum:"근"},
+    {char:"耐",hoon:"견딜",eum:"내"},{char:"怒",hoon:"성낼",eum:"노"},
+    {char:"毒",hoon:"독",eum:"독"},{char:"銅",hoon:"구리",eum:"동"},
+    {char:"覽",hoon:"볼",eum:"람"},{char:"謙",hoon:"겸손할",eum:"겸"},
+    {char:"慶",hoon:"경사",eum:"경"},{char:"警",hoon:"깨우칠",eum:"경"},
+    {char:"故",hoon:"연고",eum:"고"},{char:"固",hoon:"굳을",eum:"고"},
+    {char:"苦",hoon:"쓸",eum:"고"},{char:"困",hoon:"곤할",eum:"곤"},
+    {char:"攻",hoon:"칠",eum:"공"},{char:"觀",hoon:"볼",eum:"관"},
+    {char:"均",hoon:"고를",eum:"균"},{char:"劇",hoon:"심할",eum:"극"},
+    {char:"膽",hoon:"쓸개",eum:"담"},{char:"黨",hoon:"무리",eum:"당"},
+  ],
+  2:[
+    {char:"帶",hoon:"띠",eum:"대"},{char:"隊",hoon:"무리",eum:"대"},
+    {char:"臺",hoon:"대",eum:"대"},{char:"暴",hoon:"사나울",eum:"폭"},
+    {char:"裂",hoon:"찢을",eum:"렬"},{char:"縛",hoon:"묶을",eum:"박"},
+    {char:"拂",hoon:"떨칠",eum:"불"},{char:"壓",hoon:"누를",eum:"압"},
+    {char:"仰",hoon:"우러를",eum:"앙"},{char:"慾",hoon:"욕심",eum:"욕"},
+    {char:"遇",hoon:"만날",eum:"우"},{char:"蓄",hoon:"쌓을",eum:"축"},
+    {char:"鋼",hoon:"강철",eum:"강"},{char:"敢",hoon:"감히",eum:"감"},
+    {char:"沈",hoon:"잠길",eum:"침"},{char:"鱗",hoon:"비늘",eum:"린"},
+    {char:"泊",hoon:"묵을",eum:"박"},{char:"砂",hoon:"모래",eum:"사"},
+    {char:"涉",hoon:"건널",eum:"섭"},{char:"疏",hoon:"성길",eum:"소"},
+    {char:"肅",hoon:"엄숙할",eum:"숙"},{char:"翁",hoon:"늙은이",eum:"옹"},
+    {char:"隅",hoon:"모퉁이",eum:"우"},{char:"孫",hoon:"손자",eum:"손"},
+  ],
+  1:[
+    {char:"曙",hoon:"새벽",eum:"서"},{char:"嗅",hoon:"맡을",eum:"후"},
+    {char:"黎",hoon:"검을",eum:"려"},{char:"瞻",hoon:"볼",eum:"첨"},
+    {char:"昧",hoon:"어두울",eum:"매"},{char:"矜",hoon:"자랑할",eum:"긍"},
+    {char:"逋",hoon:"달아날",eum:"포"},{char:"膾",hoon:"회",eum:"회"},
+    {char:"膺",hoon:"가슴",eum:"응"},{char:"崢",hoon:"산높을",eum:"쟁"},
+    {char:"嶸",hoon:"산높을",eum:"영"},{char:"痙",hoon:"경련",eum:"경"},
+    {char:"瘡",hoon:"부스럼",eum:"창"},{char:"蟻",hoon:"개미",eum:"의"},
+    {char:"蛤",hoon:"조개",eum:"합"},{char:"鰒",hoon:"전복",eum:"복"},
+    {char:"鱉",hoon:"자라",eum:"별"},{char:"蠹",hoon:"좀",eum:"두"},
+    {char:"螟",hoon:"명충",eum:"명"},{char:"蟯",hoon:"요충",eum:"요"},
+  ],
+};
+
+// ════════════════════════════════════════════
+// 포켓몬 데이터
+// ════════════════════════════════════════════
+const POKEMON_POOL = {
+  8: ["caterpie","weedle","pidgey","rattata","clefairy","jigglypuff","meowth","psyduck","poliwag","bellsprout","geodude","slowpoke","magnemite","doduo","seel","gastly","drowzee","krabby","voltorb","cubone","goldeen","staryu","tauros","spearow","ekans"],
+  7: ["bulbasaur","charmander","squirtle","pikachu","vulpix","growlithe","tentacool","shellder","chansey","tangela","kangaskhan","horsea","scyther","electabuzz","magmar","pinsir","lapras","ditto","eevee","porygon","omanyte","kabuto","aerodactyl","snorlax","farfetchd"],
+  6: ["chikorita","cyndaquil","totodile","togepi","mareep","marill","sudowoodo","aipom","wooper","espeon","umbreon","murkrow","misdreavus","girafarig","steelix","snubbull","qwilfish","shuckle","sunkern","gligar","pineco","dunsparce","heracross","teddiursa","swinub"],
+  5: ["treecko","torchic","mudkip","poochyena","zigzagoon","lotad","seedot","taillow","wingull","ralts","shroomish","slakoth","nincada","whismur","makuhita","skitty","sableye","mawile","aron","meditite","electrike","plusle","minun","volbeat","illumise"],
+  4: ["turtwig","chimchar","piplup","starly","bidoof","shinx","budew","cranidos","shieldon","combee","pachirisu","buizel","cherubi","shellos","drifloon","buneary","glameow","stunky","bronzor","bonsly","happiny","chatot","spiritomb","gible","munchlax"],
+  3: ["snivy","tepig","oshawott","patrat","lillipup","purrloin","blitzle","roggenrola","woobat","drilbur","audino","timburr","tympole","sewaddle","venipede","cottonee","petilil","sandile","darumaka","maractus","dwebble","sigilyph","yamask","tirtouga","archen"],
+  2: ["chespin","fennekin","froakie","bunnelby","fletchling","scatterbug","litleo","flabebe","skiddo","pancham","espurr","honedge","spritzee","swirlix","inkay","binacle","skrelp","clauncher","helioptile","tyrunt","amaura","sylveon","hawlucha","dedenne","carbink"],
+  1: ["mewtwo","mew","lugia","ho-oh","celebi","regirock","regice","registeel","latias","latios","kyogre","groudon","rayquaza","jirachi","deoxys","dialga","palkia","giratina","darkrai","shaymin","arceus","reshiram","zekrom","kyurem","genesect"],
+};
+
+const POKEMON_KR = {
+  "caterpie":"캐터피","weedle":"뿔충이","pidgey":"구구","rattata":"꼬렛","clefairy":"삐삐",
+  "jigglypuff":"푸린","meowth":"나옹","psyduck":"고라파덕","poliwag":"발챙이","bellsprout":"냄새꼴",
+  "geodude":"꼬마돌","slowpoke":"야돈","magnemite":"코일","doduo":"두두","seel":"쥬쥬",
+  "gastly":"고오스","drowzee":"슬리프","krabby":"크랩","voltorb":"찌리리공","cubone":"탕구리",
+  "goldeen":"콘치","staryu":"별가사리","tauros":"켄타로스","spearow":"깨비참","ekans":"아보",
+  "bulbasaur":"이상해씨","charmander":"파이리","squirtle":"꼬부기","pikachu":"피카츄","vulpix":"식스테일",
+  "growlithe":"가디","tentacool":"왕눈해","shellder":"셀러","chansey":"럭키","tangela":"덩쿠리",
+  "kangaskhan":"캥카","horsea":"쏘드라","scyther":"스라크","electabuzz":"에레브","magmar":"마그마",
+  "pinsir":"쁘사이저","lapras":"라프라스","ditto":"메타몽","eevee":"이브이","porygon":"폴리곤",
+  "omanyte":"암나이트","kabuto":"투구푸스","aerodactyl":"프테라","snorlax":"잠만보","farfetchd":"파오리",
+  "chikorita":"치코리타","cyndaquil":"브케인","totodile":"리아코","togepi":"토게피","mareep":"메리프",
+  "marill":"마릴","sudowoodo":"꼬지모","aipom":"에이팜","wooper":"우파","espeon":"에브이",
+  "umbreon":"블래키","murkrow":"니로우","misdreavus":"무우마","girafarig":"기라파리그","steelix":"강철톤",
+  "snubbull":"블루","qwilfish":"독침붕","shuckle":"수꾸","sunkern":"해너츠","gligar":"글라이거",
+  "pineco":"도롱충이","dunsparce":"노고치","heracross":"헤라크로스","teddiursa":"깜지곰","swinub":"꿀꿀돼지",
+  "treecko":"나무지기","torchic":"아차모","mudkip":"물짱이","poochyena":"포치에나","zigzagoon":"지그제구리",
+  "lotad":"연꽃몬","seedot":"도토링","taillow":"테일로","wingull":"갈모매","ralts":"랄토스",
+  "shroomish":"버섯모","slakoth":"게을로","nincada":"토중몬","whismur":"소곤룡","makuhita":"마크탱",
+  "skitty":"에나비","sableye":"깜지","mawile":"입치트","aron":"아강","meditite":"도마",
+  "electrike":"전룡","plusle":"플러시","minun":"마이농","volbeat":"볼비트","illumise":"일루미즈",
+  "turtwig":"꼬부기","chimchar":"불꽃숭이","piplup":"팽도리","starly":"찌르꼬","bidoof":"비버통",
+  "shinx":"꼬링크","budew":"꼬몽울이","cranidos":"두개도스","shieldon":"방패톱스","combee":"세꿀버리",
+  "pachirisu":"파치리스","buizel":"브이젤","cherubi":"체리","shellos":"깝질무","drifloon":"흔들풍손",
+  "buneary":"이어롤","glameow":"나옹마","stunky":"스컹탱크","bronzor":"동미러","bonsly":"꼬지모",
+  "happiny":"핑복","chatot":"페라페","spiritomb":"미카르게","gible":"딥상어동","munchlax":"먹고자",
+  "snivy":"주리비얀","tepig":"뚜꾸리","oshawott":"수댕이","patrat":"보르쥐","lillipup":"요테리",
+  "purrloin":"냐오하","blitzle":"줄뮤마","roggenrola":"단굴","woobat":"코고미","drilbur":"두더류",
+  "audino":"tabunne","timburr":"도치마로","tympole":"탱그릴","sewaddle":"쪼로아","venipede":"펜드라",
+  "cottonee":"모아모아","petilil":"치라미","sandile":"메라루","darumaka":"달막화","maractus":"마라카치",
+  "dwebble":"이시즈마","sigilyph":"디아루가","yamask":"デスマス","tirtouga":"프로토가","archen":"아켓스",
+  "chespin":"하리마론","fennekin":"훈련불꽃","froakie":"개구마르","bunnelby":"호鲁루","fletchling":"찌르꼬",
+  "scatterbug":"곤들매기","litleo":"레오풀","flabebe":"플라베베","skiddo":"메에프리","pancham":"팬텀",
+  "espurr":"뇨로모","honedge":"히토쓰키","spritzee":"쉐이미","swirlix":"쉐이미","inkay":"카라마네로",
+  "binacle":"카메鏈","skrelp":"바오프","clauncher":"크랩","helioptile":"엘렉트릭","tyrunt":"티고라스",
+  "amaura":"アマルス","sylveon":"닌피아","hawlucha":"루차불","dedenne":"데덴네","carbink":"메레도",
+  "mewtwo":"뮤츠","mew":"뮤","lugia":"루기아","ho-oh":"칠색조","celebi":"세레비",
+  "regirock":"레지락","regice":"레지아이스","registeel":"레지스틸","latias":"라티아스","latios":"라티오스",
+  "kyogre":"가이오가","groudon":"그란돈","rayquaza":"레쿠쟈","jirachi":"지라치","deoxys":"테오키스",
+  "dialga":"디아루가","palkia":"팔키아","giratina":"기라티나","darkrai":"다크라이","shaymin":"쉐이미",
+  "arceus":"아르세우스","reshiram":"레시라무","zekrom":"제크로무","kyurem":"큐레무","genesect":"게노세크트",
+};
+
+function pokeUrl(name) {
+  return `https://img.pokemondb.net/artwork/large/${name}.jpg`;
+}
+function pokeKr(name) { return POKEMON_KR[name] || name; }
+function randPoke(level) {
+  const pool = POKEMON_POOL[level] || POKEMON_POOL[8];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// ════════════════════════════════════════════
+// 게임 상태
+// ════════════════════════════════════════════
+const G = {
+  level: 8,
+  party: [],          // 내 파티 (포켓몬 이름 배열)
+  activeIdx: 0,       // 현재 출전 중인 파티 인덱스
+  collected: [],      // 수집한 상대 포켓몬
+  enemyPoke: null,    // 현재 상대 포켓몬
+
+  monsterHp: 10, monsterMaxHp: 10,
+  playerHp: 3,   playerMaxHp: 3,
+  skillCharge: 0, skillMax: 3, skillReady: false,
+  combo: 0, maxCombo: 0,
+  correctCount: 0, wrongCount: 0,
+
+  pool: [], usedIdx: [],
+  currentHanja: null,
+};
+
+// ════════════════════════════════════════════
+// 유틸
+// ════════════════════════════════════════════
+function shuffle(a) {
+  for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function flash(color) {
+  const el = document.getElementById('fx-'+color);
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 160);
+}
+function floatDmg(el, text, type) {
+  const rect = el.getBoundingClientRect();
+  const d = document.createElement('div');
+  d.className = 'damage-float ' + type;
+  d.textContent = text;
+  d.style.left = (rect.left + rect.width/2 - 20) + 'px';
+  d.style.top  = (rect.top  + rect.height/2) + 'px';
+  document.body.appendChild(d);
+  setTimeout(()=>d.remove(), 850);
+}
+
+// ════════════════════════════════════════════
+// 메인 화면
+// ════════════════════════════════════════════
+function goMain() {
+  renderMainPokemons();
+  showScreen('main-screen');
+}
+
+function renderMainPokemons() {
+  const wrap = document.getElementById('main-pokemons');
+  wrap.innerHTML = '';
+
+  // 급수에 맞는 포켓몬 3마리 랜덤 선택
+  const pool = POKEMON_POOL[G.level] || POKEMON_POOL[8];
+  const picks = shuffle([...pool]).slice(0, 3);
+  const sizes = [90, 120, 90]; // 가운데가 크게
+
+  picks.forEach((name, i) => {
+    const img = document.createElement('img');
+    img.src = pokeUrl(name);
+    img.alt = pokeKr(name);
+    img.title = pokeKr(name);
+    img.style.cssText = `
+      width:${sizes[i]}px; height:${sizes[i]}px;
+      object-fit:contain; image-rendering:pixelated;
+      filter:drop-shadow(0 0 12px rgba(255,215,0,${i===1?'0.5':'0.3'}));
+      animation:mainPokeBounce 2s ease-in-out infinite;
+      animation-delay:${i * 0.3}s;
+      cursor:default;
+    `;
+    wrap.appendChild(img);
+  });
+}
+
+// ════════════════════════════════════════════
+// 파트너 선택 화면
+// ════════════════════════════════════════════
+function goStarterSelect() {
+  renderStarterScreen();
+  showScreen('starter-screen');
+}
+
+function renderStarterScreen() {
+  const isFirst = G.party.length === 0;
+  document.getElementById('starter-title').textContent = isFirst ? '⚡ 파트너를 골라라!' : '🔄 파트너 교체';
+  document.getElementById('starter-subtitle').textContent = isFirst
+    ? '함께 싸울 포켓몬을 선택하세요'
+    : '출전할 포켓몬을 선택하세요';
+
+  // 내 파티
+  const partyZone = document.getElementById('party-zone');
+  const partyCards = document.getElementById('party-cards');
+  if (G.party.length > 0) {
+    partyZone.style.display = 'block';
+    partyCards.innerHTML = '';
+    G.party.forEach((name, idx) => {
+      partyCards.appendChild(makePokeCard(name, G.level, false, idx === G.activeIdx, false, () => {
+        G.activeIdx = idx;
+        startBattle();
+      }, '출전'));
+    });
+  } else {
+    partyZone.style.display = 'none';
+  }
+
+  // 새 파트너 후보 3마리 (같은 급수에서)
+  document.getElementById('new-label').textContent = isFirst ? '✨ 파트너를 선택하세요' : '✨ 새 파트너 영입';
+  const newCards = document.getElementById('new-cards');
+  newCards.innerHTML = '';
+
+  const pool = (POKEMON_POOL[G.level] || []).filter(p => !G.party.includes(p));
+  const fallback = POKEMON_POOL[G.level] || [];
+  const src = pool.length >= 3 ? pool : fallback;
+  const picks = shuffle([...src]).slice(0, 3);
+
+  picks.forEach(name => {
+    newCards.appendChild(makePokeCard(name, G.level, false, false, false, () => {
+      if (!G.party.includes(name)) G.party.push(name);
+      G.activeIdx = G.party.indexOf(name);
+      startBattle();
+    }, isFirst ? '선택!' : '영입'));
+  });
+}
+
+// 다음 상대 3마리 생성
+// 슬롯1: 같은 급수 (확정)
+// 슬롯2: 50% → 한등급 위 / 50% → 같은 급수
+// 슬롯3: 25% → 두등급 위 / 75% → 같은 급수
+function generateEnemyCandidates() {
+  const result = [];
+  const collected = G.collected;
+
+  function pickFrom(level) {
+    const pool = (POKEMON_POOL[level] || []).filter(p => !collected.includes(p));
+    const fallback = POKEMON_POOL[level] || [];
+    const src = pool.length > 0 ? pool : fallback;
+    return { name: src[Math.floor(Math.random() * src.length)], level };
+  }
+
+  // 슬롯1: 확정 같은 급수
+  result.push({ ...pickFrom(G.level), tier: 'normal' });
+
+  // 슬롯2: 50% 한 등급 위
+  if (Math.random() < 0.5 && G.level > 1) {
+    result.push({ ...pickFrom(G.level - 1), tier: 'rare1' });
+  } else {
+    result.push({ ...pickFrom(G.level), tier: 'normal' });
+  }
+
+  // 슬롯3: 25% 두 등급 위
+  if (Math.random() < 0.25 && G.level > 2) {
+    result.push({ ...pickFrom(G.level - 2), tier: 'rare2' });
+  } else {
+    result.push({ ...pickFrom(G.level), tier: 'normal' });
+  }
+
+  // 중복 이름 제거 (같은 포켓몬이 두 번 나오지 않게)
+  const seen = new Set();
+  return result.map(item => {
+    if (seen.has(item.name)) {
+      const pool = (POKEMON_POOL[item.level] || []).filter(p => !seen.has(p));
+      const fallback = POKEMON_POOL[item.level] || [];
+      const src = pool.length > 0 ? pool : fallback;
+      item.name = src[Math.floor(Math.random() * src.length)];
+    }
+    seen.add(item.name);
+    return item;
+  });
+}
+
+function makePokeCard(name, level, rare, isActive, isNew, onClick, btnLabel) {
+  const card = document.createElement('div');
+  card.className = 'poke-card' + (isActive ? ' active-pokemon' : '') + (G.party.includes(name) && !isActive ? ' in-party' : '');
+
+  const img = document.createElement('img');
+  img.src = pokeUrl(name); img.alt = pokeKr(name);
+
+  const nm = document.createElement('div');
+  nm.className = 'poke-card-name'; nm.textContent = pokeKr(name);
+
+  const lv = document.createElement('div');
+  lv.className = 'poke-card-level'; lv.textContent = level + '급';
+
+  card.appendChild(img); card.appendChild(nm); card.appendChild(lv);
+
+  if (rare) {
+    const b = document.createElement('div');
+    b.className = 'poke-badge rare'; b.textContent = '✨ 레어';
+    card.appendChild(b);
+  }
+  if (isActive) {
+    const b = document.createElement('div');
+    b.className = 'poke-badge out'; b.textContent = '출전중';
+    card.appendChild(b);
+  }
+
+  card.onclick = onClick;
+  return card;
+}
+
+// ════════════════════════════════════════════
+// 배틀 시작
+// ════════════════════════════════════════════
+function startBattle() {
+  // 한자 풀
+  let pool = [];
+  for (let lv=8; lv>=G.level; lv--) {
+    if (HANJA_DB[lv]) pool = pool.concat(HANJA_DB[lv]);
+  }
+  const seen = new Set();
+  pool = pool.filter(h=>{ if(seen.has(h.char)) return false; seen.add(h.char); return true; });
+  G.pool = shuffle(pool);
+  G.usedIdx = [];
+
+  resetBattleState();
+  showScreen('battle-screen');
+  document.getElementById('level-badge').textContent = G.level + '급';
+  loadNextHanja();
+  updateAllUI();
+}
+
+function resetBattleState() {
+  G.monsterHp = 10; G.playerHp = 3;
+  G.skillCharge = 0; G.skillReady = false;
+  G.combo = 0; G.maxCombo = 0;
+  G.correctCount = 0; G.wrongCount = 0;
+
+  // 내 포켓몬 이미지
+  const myName = G.party[G.activeIdx];
+  document.getElementById('my-img').src = pokeUrl(myName);
+  document.getElementById('my-name').textContent = pokeKr(myName);
+
+  // 상대 몬스터 (랜덤)
+  G.enemyPoke = randPoke(G.level);
+  document.getElementById('enemy-img').src = pokeUrl(G.enemyPoke);
+  document.getElementById('enemy-name').textContent = '야생 ' + pokeKr(G.enemyPoke);
+}
+
+// ════════════════════════════════════════════
+// 한자 문제
+// ════════════════════════════════════════════
+function loadNextHanja() {
+  const available = G.pool.filter((_,i)=>!G.usedIdx.includes(i));
+  if (available.length === 0) G.usedIdx = [];
+  const avail2 = G.pool.filter((_,i)=>!G.usedIdx.includes(i));
+  const idx = G.pool.indexOf(avail2[Math.floor(Math.random()*avail2.length)]);
+  G.usedIdx.push(idx);
+  G.currentHanja = G.pool[idx];
+  document.getElementById('hanja-char').textContent = G.currentHanja.char;
+  document.getElementById('hanja-hint').textContent = '훈(訓)과 음(音)을 고르세요';
+  renderChoices();
+}
+
+function renderChoices() {
+  const correct = G.currentHanja;
+  const correctText = correct.hoon + ' ' + correct.eum;
+  const others = shuffle(G.pool.filter(h=>h.char!==correct.char)).slice(0,2);
+  const choices = shuffle([correctText, ...others.map(h=>h.hoon+' '+h.eum)]);
+
+  const grid = document.getElementById('choices-grid');
+  grid.innerHTML = '';
+  choices.forEach(text => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = text;
+    btn.onclick = () => onChoice(btn, text === correctText);
+    grid.appendChild(btn);
+  });
+}
+
+function onChoice(btn, isCorrect) {
+  document.querySelectorAll('.choice-btn').forEach(b=>b.disabled=true);
+
+  if (isCorrect) {
+    btn.classList.add('correct');
+    G.correctCount++;
+    G.combo++;
+    if (G.combo > G.maxCombo) G.maxCombo = G.combo;
+
+    G.monsterHp = Math.max(0, G.monsterHp - 1);
+
+    // 내 포켓몬 공격 애니메이션
+    const myEl = document.getElementById('my-img');
+    myEl.style.animation = 'none';
+    myEl.offsetHeight;
+    myEl.style.animation = '';
+    myEl.classList.add('attack-anim');
+    setTimeout(()=>myEl.classList.remove('attack-anim'), 400);
+
+    // 상대 피격
+    const enEl = document.getElementById('enemy-img');
+    enEl.classList.add('hit-anim');
+    setTimeout(()=>enEl.classList.remove('hit-anim'), 350);
+
+    floatDmg(enEl, '-1', 'dmg');
+    flash('green');
+
+    if (!G.skillReady) {
+      G.skillCharge++;
+      if (G.skillCharge >= G.skillMax) { G.skillCharge = G.skillMax; G.skillReady = true; }
+    }
+
+    updateAllUI();
+
+    if (G.monsterHp <= 0) { setTimeout(showCatchScreen, 500); return; }
+
+    setTimeout(()=>{ resetChoiceBtns(); loadNextHanja(); }, 600);
+
+  } else {
+    btn.classList.add('wrong');
+    G.wrongCount++; G.combo = 0;
+    G.skillCharge = Math.max(0, G.skillCharge - 1);
+    G.playerHp = Math.max(0, G.playerHp - 1);
+
+    // 상대 공격 (내 포켓몬 흔들림)
+    const enEl = document.getElementById('enemy-img');
+    enEl.classList.add('shake');
+    setTimeout(()=>enEl.classList.remove('shake'), 400);
+
+    flash('red');
+
+    // 정답 하이라이트
+    document.querySelectorAll('.choice-btn').forEach(b=>{
+      if (b.textContent === G.currentHanja.hoon+' '+G.currentHanja.eum) b.classList.add('correct');
+    });
+
+    updateAllUI();
+
+    if (G.playerHp <= 0) { setTimeout(showGameOver, 600); return; }
+    setTimeout(()=>{ resetChoiceBtns(); loadNextHanja(); }, 1200);
+  }
+}
+
+function resetChoiceBtns() {
+  document.querySelectorAll('.choice-btn').forEach(b=>{
+    b.disabled=false; b.classList.remove('correct','wrong');
+  });
+}
+
+// ════════════════════════════════════════════
+// 스킬 (레이저)
+// ════════════════════════════════════════════
+function useSkill() {
+  if (!G.skillReady) return;
+  G.skillReady = false; G.skillCharge = 0;
+  updateSkillUI();
+  fireLaser();
+  setTimeout(()=>{
+    G.monsterHp = Math.max(0, G.monsterHp - 3);
+    const enEl = document.getElementById('enemy-img');
+    floatDmg(enEl, '-3', 'crit');
+    enEl.classList.add('hit-anim');
+    setTimeout(()=>enEl.classList.remove('hit-anim'), 350);
+    flash('gold');
+    updateAllUI();
+    if (G.monsterHp <= 0) setTimeout(showCatchScreen, 500);
+  }, 280);
+}
+
+function fireLaser() {
+  const wrap = document.getElementById('laser-wrap');
+  const myEl = document.getElementById('my-img');
+  const enEl = document.getElementById('enemy-img');
+  const sr = myEl.getBoundingClientRect();
+  const tr = enEl.getBoundingClientRect();
+  const sx = sr.left + sr.width/2, sy = sr.top + sr.height/2;
+  const tx = tr.left + tr.width/2, ty = tr.top + tr.height/2;
+  const angle = Math.atan2(ty-sy, tx-sx) * 180/Math.PI;
+
+  const beam = document.createElement('div');
+  beam.className = 'laser-beam';
+  beam.style.cssText = `left:${sx}px;top:${sy}px;transform:rotate(${angle}deg);`;
+  wrap.appendChild(beam);
+
+  setTimeout(()=>{
+    [['laser-impact','impact'],['laser-ring','ring']].forEach(([cls])=>{
+      const el = document.createElement('div');
+      el.className = cls;
+      el.style.cssText = `left:${tx}px;top:${ty}px;`;
+      wrap.appendChild(el);
+      setTimeout(()=>el.remove(), 500);
+    });
+    beam.remove();
+  }, 220);
+}
+
+// ════════════════════════════════════════════
+// UI 업데이트
+// ════════════════════════════════════════════
+function updateAllUI() {
+  // 적 HP 바
+  const pct = (G.monsterHp / G.monsterMaxHp) * 100;
+  const fill = document.getElementById('enemy-hp-fill');
+  fill.style.width = pct + '%';
+  fill.className = 'hp-fill' + (pct>50?'': pct>20?' yellow':' red');
+  document.getElementById('enemy-hp-text').textContent = G.monsterHp+'/'+G.monsterMaxHp;
+
+  // 진행 점
+  const dots = document.getElementById('progress-dots');
+  dots.innerHTML = '';
+  for (let i=0;i<G.monsterMaxHp;i++){
+    const d=document.createElement('div');
+    d.className='dot'+(i>=G.monsterHp?' hit':'');
+    dots.appendChild(d);
+  }
+
+  // 내 HP
+  const hearts = document.getElementById('player-hearts');
+  hearts.innerHTML = '';
+  for (let i=0;i<G.playerMaxHp;i++){
+    const h=document.createElement('span');
+    h.className='heart'+(i>=G.playerHp?' empty':'');
+    h.textContent='❤️';
+    hearts.appendChild(h);
+  }
+
+  updateSkillUI();
+}
+
+function updateSkillUI() {
+  const btn = document.getElementById('skill-btn');
+  const label = document.getElementById('skill-label');
+
+  if (G.skillReady) {
+    btn.className = 'skill-btn ready';
+    label.textContent = '🔥 발동!';
+  } else if (G.skillCharge > 0) {
+    btn.className = 'skill-btn charging';
+    label.textContent = '⚡ 스킬';
+  } else {
+    btn.className = 'skill-btn';
+    label.textContent = '⚡ 스킬';
+  }
+
+  const pips = document.getElementById('skill-pips');
+  pips.innerHTML = '';
+  for (let i=0;i<G.skillMax;i++){
+    const p=document.createElement('div');
+    p.className='skill-pip'+(i<G.skillCharge?' filled':'');
+    pips.appendChild(p);
+  }
+}
+
+// ════════════════════════════════════════════
+// 처치 후 화면 — 적 자동 수집 + 다음 상대 선택
+// ════════════════════════════════════════════
+function showCatchScreen() {
+  launchConfetti();
+
+  // 처치한 포켓몬 자동 수집
+  if (!G.collected.includes(G.enemyPoke)) {
+    G.collected.push(G.enemyPoke);
+  }
+
+  // 수집 메시지
+  document.getElementById('catch-caught-name').textContent =
+    `✅ ${pokeKr(G.enemyPoke)}을(를) 수집했습니다! (총 ${G.collected.length}마리)`;
+
+  // 스탯
+  document.getElementById('c-correct').textContent = G.correctCount;
+  document.getElementById('c-wrong').textContent   = G.wrongCount;
+  document.getElementById('c-combo').textContent   = G.maxCombo;
+
+  // 수집 도감 렌더
+  const collImgs = document.getElementById('coll-imgs');
+  collImgs.innerHTML = '';
+  G.collected.forEach(name => {
+    const img = document.createElement('img');
+    img.className = 'coll-thumb';
+    img.src = pokeUrl(name);
+    img.alt = img.title = pokeKr(name);
+    collImgs.appendChild(img);
+  });
+
+  // 다음 상대 3마리 선택 카드
+  const candidates = generateEnemyCandidates();
+  const nextCards = document.getElementById('next-enemy-cards');
+  nextCards.innerHTML = '';
+
+  candidates.forEach(({ name, level, tier }) => {
+    const card = document.createElement('div');
+    const isRare1 = tier === 'rare1';
+    const isRare2 = tier === 'rare2';
+    card.className = 'poke-card' + (isRare2 ? ' rare2-card' : isRare1 ? ' rare1-card' : '');
+
+    // 이미지
+    const img = document.createElement('img');
+    img.src = pokeUrl(name); img.alt = pokeKr(name);
+
+    // 이름
+    const nm = document.createElement('div');
+    nm.className = 'poke-card-name'; nm.textContent = pokeKr(name);
+
+    // 급수
+    const lv = document.createElement('div');
+    lv.className = 'poke-card-level'; lv.textContent = level + '급';
+
+    card.appendChild(img); card.appendChild(nm); card.appendChild(lv);
+
+    // 뱃지
+    if (isRare2) {
+      const b = document.createElement('div');
+      b.className = 'poke-badge rare2'; b.textContent = '💎 초레어 25%';
+      card.appendChild(b);
+    } else if (isRare1) {
+      const b = document.createElement('div');
+      b.className = 'poke-badge rare1'; b.textContent = '⭐ 레어 50%';
+      card.appendChild(b);
+    }
+
+    // 이미 수집한 포켓몬 표시
+    if (G.collected.includes(name)) {
+      const c = document.createElement('div');
+      c.className = 'poke-badge collected-badge'; c.textContent = '✅ 수집완료';
+      card.appendChild(c);
+    }
+
+    card.onclick = () => {
+      G.enemyPoke = name;
+      G.level = level;
+      document.getElementById('level-badge').textContent = level + '급';
+      // 한자풀 급수 변경 시 재구성
+      let pool = [];
+      for (let lv = 8; lv >= G.level; lv--) {
+        if (HANJA_DB[lv]) pool = pool.concat(HANJA_DB[lv]);
+      }
+      const seen = new Set();
+      pool = pool.filter(h => { if (seen.has(h.char)) return false; seen.add(h.char); return true; });
+      G.pool = shuffle(pool); G.usedIdx = [];
+
+      // 배틀 리셋 (내 포켓몬 유지, 상대만 교체)
+      G.monsterHp = 10; G.playerHp = 3;
+      G.skillCharge = 0; G.skillReady = false;
+      G.combo = 0; G.maxCombo = 0;
+      G.correctCount = 0; G.wrongCount = 0;
+
+      document.getElementById('enemy-img').src = pokeUrl(name);
+      document.getElementById('enemy-name').textContent = '야생 ' + pokeKr(name);
+
+      updateAllUI();
+      loadNextHanja();
+      showScreen('battle-screen');
+    };
+
+    nextCards.appendChild(card);
+  });
+
+  showScreen('catch-screen');
+}
+
+// ════════════════════════════════════════════
+// 게임 오버
+// ════════════════════════════════════════════
+function showGameOver() {
+  document.getElementById('go-img').src = pokeUrl(G.enemyPoke);
+  document.getElementById('go-correct').textContent = G.correctCount;
+  document.getElementById('go-wrong').textContent   = G.wrongCount;
+  document.getElementById('go-combo').textContent   = G.maxCombo;
+  showScreen('gameover-screen');
+}
+
+function retryBattle() {
+  resetBattleState();
+  showScreen('battle-screen');
+  loadNextHanja();
+  updateAllUI();
+}
+
+// ════════════════════════════════════════════
+// 폭죽
+// ════════════════════════════════════════════
+function launchConfetti() {
+  const c = document.getElementById('confetti');
+  c.innerHTML = '';
+  const cols = ['#ffd700','#ff4455','#00e676','#4488ff','#aa44ff','#ff8800','#ffffff'];
+  for (let i=0;i<80;i++){
+    const el = document.createElement('div');
+    el.className = 'cp';
+    el.style.cssText = `left:${Math.random()*100}vw;
+      background:${cols[Math.floor(Math.random()*cols.length)]};
+      width:${Math.random()*10+4}px;height:${Math.random()*10+4}px;
+      border-radius:${Math.random()>.5?'50%':'2px'};
+      animation-duration:${Math.random()*1.5+1.5}s;
+      animation-delay:${Math.random()*.5}s;`;
+    c.appendChild(el);
+  }
+  setTimeout(()=>c.innerHTML='', 3500);
+}
+
+// ════════════════════════════════════════════
+// 급수 선택
+// ════════════════════════════════════════════
+document.querySelectorAll('.level-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.level-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    G.level = parseInt(btn.dataset.level);
+    renderMainPokemons(); // 급수 바꾸면 포켓몬도 교체
+  });
+});
+
+// 초기 포켓몬 렌더
+renderMainPokemons();
+</script>
+</body>
+</html>
